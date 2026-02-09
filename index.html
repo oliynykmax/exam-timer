@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUT/LAB Exam Room</title>
+  <meta name="description" content="Exam room display utility for LUT and LAB Universities">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23000' width='100' height='100'/><text x='50' y='68' font-size='48' font-weight='bold' fill='%23fff' text-anchor='middle' font-family='system-ui'>E</text></svg>">
+  <script src="https://unpkg.com/lz-string@1.5.0/libs/lz-string.min.js"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      /* High contrast palette for projector visibility */
+      --bg: #f5f5f5;
+      --surface: #ffffff;
+      --text: #000000;
+      --text-secondary: #333333;
+      --border: #cccccc;
+      --border-strong: #666666;
+      --accent: #c00000;
+      --clock-bg: #000000;
+      --clock-text: #ffffff;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .mono {
+      font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+    }
+
+    .app {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--clock-bg);
+      color: var(--clock-text);
+      padding: 1.25rem 2rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .mode-btn {
+      padding: 0.5rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: transparent;
+      color: var(--clock-text);
+      border: 2px solid var(--clock-text);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .mode-btn:hover {
+      background: var(--clock-text);
+      color: var(--clock-bg);
+    }
+
+    .header-main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3rem;
+    }
+
+    .clock-block {
+      text-align: center;
+    }
+
+    .clock {
+      font-size: 4rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.05em;
+    }
+
+    .date {
+      font-size: 1rem;
+      font-weight: 500;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 4rem;
+      background: rgba(255,255,255,0.3);
+    }
+
+    .header-times {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .header-time-block {
+      text-align: center;
+    }
+
+    .header-time-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      opacity: 0.6;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.2rem;
+    }
+
+    .header-time-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .header-end {
+      width: 100px;
+      text-align: right;
+    }
+
+    /* ===== SETTINGS BAR ===== */
+    .settings-bar {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .setting {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .setting-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .setting-input {
+      width: 70px;
+      padding: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: 2px solid var(--border-strong);
+      background: var(--bg);
+      text-align: center;
+    }
+
+    .setting-time {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .setting-time input {
+      width: 55px;
+      padding: 0.5rem 0.25rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: 2px solid var(--border-strong);
+      background: var(--bg);
+      text-align: center;
+      -moz-appearance: textfield;
+    }
+
+    .setting-time input::-webkit-outer-spin-button,
+    .setting-time input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .setting-time-sep {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .setting-unit {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .add-btn {
+      margin-left: auto;
+      padding: 0.6rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      background: var(--text);
+      color: var(--surface);
+      border: none;
+      cursor: pointer;
+    }
+
+    .add-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ===== EXAMS LIST ===== */
+    .exams {
+      flex: 1;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+    }
+
+    /* ===== EXAM CARD ===== */
+    .exam {
+      background: var(--surface);
+      border: 2px solid var(--border);
+    }
+
+    .exam-top {
+      display: flex;
+    }
+
+    .exam-color-bar {
+      width: 10px;
+    }
+
+    .exam-header {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .exam-name {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .exam-code {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .exam-body {
+      display: flex;
+    }
+
+    .exam-body-spacer {
+      width: 10px;
+    }
+
+    .exam-content {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+
+    .exam-notes {
+      flex: 1;
+    }
+
+    .notes-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .notes-text {
+      font-size: 1.25rem;
+      font-weight: 500;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    /* ===== EXAM EDIT FORM ===== */
+    .exam-edit {
+      background: var(--bg);
+      border-top: 2px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .field-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .field input,
+    .field textarea {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 2px solid var(--border-strong);
+      background: var(--surface);
+      font-family: inherit;
+    }
+
+    .field input[type="text"] { width: 180px; }
+    .field input[type="time"] { width: 130px; }
+    .field input[type="color"] { width: 50px; height: 38px; padding: 2px; cursor: pointer; }
+    .field textarea { width: 260px; height: 60px; resize: vertical; }
+
+    .del-btn {
+      margin-left: auto;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: var(--accent);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* ===== PRESENT MODE ===== */
+    .present .header {
+      padding: 1rem 2rem;
+    }
+
+    .present .clock {
+      font-size: 5rem;
+    }
+
+    .present .header-time-value {
+      font-size: 2.25rem;
+    }
+
+    .present .header-divider {
+      height: 5rem;
+    }
+
+    .present .exam-name {
+      font-size: 1.75rem;
+    }
+
+    .present .exam-code {
+      font-size: 1.1rem;
+    }
+
+    .present .time-value {
+      font-size: 2rem;
+    }
+
+    .present .time-label {
+      font-size: 0.8rem;
+    }
+
+    .present .notes-text {
+      font-size: 1.1rem;
+    }
+
+    .present .notes-label {
+      font-size: 0.8rem;
+    }
+
+    .present .exam-color-bar,
+    .present .exam-body-spacer {
+      width: 12px;
+    }
+
+    .present .exam-header {
+      padding: 0.6rem 1.25rem;
+    }
+
+    .present .exam-content {
+      padding: 0.6rem 1.25rem;
+    }
+
+    .present .exams {
+      gap: 0.5rem;
+      padding: 0.75rem 2rem;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .header-end { display: none; }
+      .clock { font-size: 3.5rem; }
+
+      .clock-block {
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: center;
+      }
+
+      .settings-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+      }
+
+      .add-btn { margin-left: 0; }
+
+      .exam-content {
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+
+  <script>
+    let state = {
+      mode: 'edit',
+      startTime: '09:00',
+      duration: 180,
+      leaveAfter: 15,
+      courses: []
+    };
+
+    const uuid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
+
+    const esc = s => s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '';
+
+    // Time offset from server (ms)
+    let timeOffset = 0;
+
+    const syncTime = async () => {
+      try {
+        const res = await fetch('https://worldtimeapi.org/api/timezone/Europe/Helsinki');
+        const data = await res.json();
+        const serverTime = new Date(data.datetime).getTime();
+        const localTime = Date.now();
+        timeOffset = serverTime - localTime;
+        console.log(`Time synced. Offset: ${timeOffset}ms`);
+      } catch (e) {
+        console.warn('Time sync failed, using device time');
+      }
+    };
+
+    const getSyncedDate = () => new Date(Date.now() + timeOffset);
+
+    const finlandClock = () => getSyncedDate().toLocaleTimeString('fi-FI', {
+      timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+
+    const finlandDate = () => getSyncedDate().toLocaleDateString('en-GB', {
+      timeZone: 'Europe/Helsinki', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    const addMins = (time, mins) => {
+      const [h, m] = time.split(':').map(Number);
+      const t = h * 60 + m + mins;
+      return `${String(Math.floor(t / 60) % 24).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+    };
+
+    const pack = () => ({
+      s: state.startTime,
+      d: state.duration,
+      l: state.leaveAfter,
+      c: state.courses.map(x => [x.id.slice(0,8), x.name, x.code, x.color, x.notes])
+    });
+
+    const unpack = d => ({
+      startTime: d.s || '09:00',
+      duration: d.d || 180,
+      leaveAfter: d.l || 15,
+      courses: (d.c || d.e || []).map(x => ({ id: x[0] || uuid(), name: x[1] || '', code: x[2] || '', color: x[3] || '#2563eb', notes: x[4] || '' }))
+    });
+
+    const encode = () => LZString.compressToEncodedURIComponent(JSON.stringify(pack()));
+    const decode = s => { try { const j = LZString.decompressFromEncodedURIComponent(s); return j ? unpack(JSON.parse(j)) : null; } catch { return null; } };
+    const saveLocal = () => localStorage.setItem('lut-exam', JSON.stringify(pack()));
+    const loadLocal = () => { try { const s = localStorage.getItem('lut-exam'); return s ? unpack(JSON.parse(s)) : null; } catch { return null; } };
+    const save = () => { saveLocal(); history.replaceState(null, '', '#' + encode()); };
+    const load = () => { const h = location.hash.slice(1); const d = h ? decode(h) : loadLocal(); if (d) { state.startTime = d.startTime; state.duration = d.duration; state.leaveAfter = d.leaveAfter; state.courses = d.courses; } };
+
+    const render = () => {
+      const p = state.mode === 'present';
+      const app = document.getElementById('app');
+      app.className = p ? 'app present' : 'app';
+      
+      const end = addMins(state.startTime, state.duration);
+      const leave = addMins(state.startTime, state.leaveAfter);
+
+      let h = `
+        <header class="header">
+          <button class="mode-btn" onclick="toggleMode()">${p ? '← Edit' : 'Present →'}</button>
+          <div class="header-main">
+            <div class="clock-block">
+              <div class="clock mono" id="clock">${finlandClock()}</div>
+              <div class="date">${finlandDate()}</div>
+            </div>
+            <div class="header-divider"></div>
+            <div class="header-times">
+              <div class="header-time-block">
+                <div class="header-time-label">Start</div>
+                <div class="header-time-value mono">${state.startTime}</div>
+              </div>
+              <div class="header-time-block">
+                <div class="header-time-label">End</div>
+                <div class="header-time-value mono">${end}</div>
+              </div>
+              <div class="header-time-block">
+                <div class="header-time-label">May leave</div>
+                <div class="header-time-value mono leave">${leave}</div>
+              </div>
+            </div>
+          </div>
+          <div class="header-end"></div>
+        </header>
+      `;
+
+      if (!p) {
+        const [startH, startM] = state.startTime.split(':');
+        h += `
+          <div class="settings-bar">
+            <div class="setting">
+              <span class="setting-label">Start</span>
+              <div class="setting-time">
+                <input type="text" maxlength="2" value="${startH}" onchange="setStartH(this.value)" onclick="this.select()">
+                <span class="setting-time-sep">:</span>
+                <input type="text" maxlength="2" value="${startM}" onchange="setStartM(this.value)" onclick="this.select()">
+              </div>
+            </div>
+            <div class="setting">
+              <span class="setting-label">Duration</span>
+              <input class="setting-input" type="number" value="${state.duration}" min="1" max="600" onchange="setDuration(this.value)">
+              <span class="setting-unit">min</span>
+            </div>
+            <div class="setting">
+              <span class="setting-label">May leave after</span>
+              <input class="setting-input" type="number" value="${state.leaveAfter}" min="0" max="600" onchange="setLeave(this.value)">
+              <span class="setting-unit">min</span>
+            </div>
+            <button class="add-btn" onclick="addCourse()" ${state.courses.length >= 5 ? 'disabled' : ''}>+ Add Course</button>
+          </div>
+        `;
+      }
+
+      h += '<main class="exams">';
+
+      if (!state.courses.length) {
+        h += '<div class="empty">No courses</div>';
+      } else {
+        for (const c of state.courses) {
+          h += `
+            <article class="exam">
+              <div class="exam-top">
+                <div class="exam-color-bar" style="background:${c.color}"></div>
+                <div class="exam-header">
+                  <span class="exam-name">${esc(c.name) || 'Untitled'}</span>
+                  <span class="exam-code">${esc(c.code)}</span>
+                </div>
+              </div>
+              ${c.notes ? `
+                <div class="exam-body">
+                  <div class="exam-body-spacer" style="background:${c.color}"></div>
+                  <div class="exam-content">
+                    <div class="exam-notes">
+                      <div class="notes-label">Notes</div>
+                      <div class="notes-text">${esc(c.notes)}</div>
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+              ${!p ? `
+                <div class="exam-edit">
+                  <div class="field">
+                    <label class="field-label">Name</label>
+                    <input type="text" value="${esc(c.name)}" onchange="updateCourse('${c.id}','name',this.value)">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Code</label>
+                    <input type="text" value="${esc(c.code)}" onchange="updateCourse('${c.id}','code',this.value)">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Color</label>
+                    <input type="color" value="${c.color}" onchange="updateCourse('${c.id}','color',this.value)">
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Notes</label>
+                    <textarea onchange="updateCourse('${c.id}','notes',this.value)">${esc(c.notes)}</textarea>
+                  </div>
+                  <button class="del-btn" onclick="delCourse('${c.id}')">Delete</button>
+                </div>
+              ` : ''}
+            </article>
+          `;
+        }
+      }
+
+      h += '</main>';
+      app.innerHTML = h;
+    };
+
+    window.toggleMode = () => { 
+      state.mode = state.mode === 'edit' ? 'present' : 'edit'; 
+      if (state.mode === 'present') {
+        document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.();
+      } else if (document.fullscreenElement || document.webkitFullscreenElement) {
+        document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+      }
+      render(); 
+    };
+    window.setStartH = v => { 
+      const h = Math.max(0, Math.min(23, parseInt(v) || 0));
+      const [, m] = state.startTime.split(':');
+      state.startTime = `${String(h).padStart(2,'0')}:${m}`;
+      save(); render();
+    };
+    window.setStartM = v => { 
+      const m = Math.max(0, Math.min(59, parseInt(v) || 0));
+      const [h] = state.startTime.split(':');
+      state.startTime = `${h}:${String(m).padStart(2,'0')}`;
+      save(); render();
+    };
+    window.setDuration = v => { state.duration = Math.max(1, +v || 180); save(); render(); };
+    window.setLeave = v => { state.leaveAfter = Math.max(0, +v || 15); save(); render(); };
+    window.addCourse = () => { if (state.courses.length >= 5) return; state.courses.push({ id: uuid(), name: '', code: '', color: '#2563eb', notes: '' }); save(); render(); };
+    window.updateCourse = (id, k, v) => { const c = state.courses.find(x => x.id === id); if (c) { c[k] = v; save(); render(); } };
+    window.delCourse = id => { state.courses = state.courses.filter(x => x.id !== id); save(); render(); };
+
+    load();
+    syncTime();
+    render();
+    setInterval(() => { const el = document.getElementById('clock'); if (el) el.textContent = finlandClock(); }, 1000);
+    // Re-sync every 10 minutes
+    setInterval(syncTime, 10 * 60 * 1000);
+  </script>
+</body>
+</html>
