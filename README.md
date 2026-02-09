@@ -1,23 +1,20 @@
-# Exam Timer ⏱️
+# Exam Room Display
 
-A clean, minimalist countdown timer designed for exam sessions.
+An exam room display utility for universities showing live clock, exam schedule, and course information optimized for projector visibility.
 
 ## Features
 
-- **Fixed duration**: 1 hour 30 minutes countdown
-- **Visual progress**: Color-coded time remaining (green → yellow → red)
-- **Audio alerts**: Notifications at 30min, 10min, 5min, and end
-- **Simple controls**: Start, pause, and reset
-- **Fullscreen ready**: Clean interface optimized for projection
+- **Live clock** synced to Europe/Helsinki timezone via WorldTimeAPI
+- **Configurable exam session** with start time, duration, and early-leave time
+- **Multi-course display** (up to 5 courses) with name, code, color coding, and notes
+- **Present mode** with fullscreen support and larger text for projection
+- **URL state persistence** - share configured exam sessions via encoded URL hash
+- **High contrast design** optimized for projector readability
 
 ## Demo
 
-🔗 [View Live Demo](https://oliynykmax.github.io/exam-timer/)
+🔗 [https://oliynykmax.github.io/exam-timer/](https://oliynykmax.github.io/exam-timer/)
 
 ## Built With
 
-Created using [pi](https://github.com/mariozechner/pi-coding-agent) and Claude Opus 4.5
-
----
-
-*Simple, focused, and distraction-free.*
+Created using [pi.dev](https://pi.dev) and Claude Opus 4.5
