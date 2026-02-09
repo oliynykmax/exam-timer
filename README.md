@@ -12,7 +12,7 @@ A clean, minimalist countdown timer designed for exam sessions.
 
 ## Demo
 
-🔗 [View Live Demo](http://pongweb3d.me/exam-timer/)
+🔗 [View Live Demo](https://oliynykmax.github.io/exam-timer/)
 
 ## Built With
 
