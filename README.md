@@ -1,4 +1,4 @@
-# Exam Room Display
+# Exam Room Display / Koetila-näyttö
 
 An exam room display utility for universities showing live clock, exam schedule, and course information optimized for projector visibility.
 
@@ -7,6 +7,7 @@ An exam room display utility for universities showing live clock, exam schedule,
 - **Live clock** synced to Europe/Helsinki timezone via WorldTimeAPI
 - **Configurable exam session** with start time, duration, and early-leave time
 - **Multi-course display** (up to 10 courses) with name, code, color coding, and notes
+- **Bilingual Support** - 3-way language switch (Finnish, English, or Both) for all UI elements
 - **Course management** including duplication, removal, and bulk clear actions
 - **Present mode** with fullscreen support and larger text for projection
 - **URL state persistence** - share configured exam sessions via encoded URL hash
