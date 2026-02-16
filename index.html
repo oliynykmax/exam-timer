@@ -242,10 +242,18 @@
       .empty {
         flex: 1;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        gap: 1rem;
+        font-size: 2rem;
+        font-weight: 700;
         color: var(--text-secondary);
+        opacity: 0.5;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border: 4px dashed var(--border);
+        margin: 2rem;
       }
 
       /* ===== EXAM CARD ===== */
@@ -513,7 +521,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.7);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -530,12 +538,11 @@
 
       .modal {
         background: var(--surface);
-        border: 2px solid var(--border-strong);
-        border-radius: 8px;
-        padding: 1.5rem;
+        border: 4px solid var(--text);
+        padding: 0;
         min-width: 320px;
         max-width: 400px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.2);
         transform: scale(0.95);
         transition: transform 0.15s ease;
       }
@@ -544,40 +551,58 @@
         transform: scale(1);
       }
 
+      .modal-header {
+        background: var(--text);
+        color: var(--surface);
+        padding: 1rem 1.5rem;
+      }
+
       .modal-title {
-        font-size: 1.1rem;
+        font-size: 1.25rem;
         font-weight: 700;
-        margin-bottom: 0.75rem;
-        color: var(--text);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .modal-content {
+        padding: 2rem 1.5rem;
       }
 
       .modal-message {
-        font-size: 0.95rem;
-        color: var(--text-secondary);
-        margin-bottom: 1.25rem;
+        font-size: 1.1rem;
+        color: var(--text);
+        font-weight: 500;
         line-height: 1.5;
       }
 
       .modal-actions {
         display: flex;
-        gap: 0.75rem;
         justify-content: flex-end;
+        gap: 1rem;
+        padding: 0 1.5rem 1.5rem;
       }
 
       .modal-btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-        font-weight: 600;
-        border: 2px solid var(--border-strong);
-        border-radius: 4px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 700;
+        border: 2px solid var(--text);
         cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
         background: var(--surface);
         color: var(--text);
-        transition: background 0.1s;
+        transition: transform 0.1s, box-shadow 0.1s;
       }
 
       .modal-btn:hover {
-        background: var(--bg);
+        transform: translate(-2px, -2px);
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+      }
+
+      .modal-btn:active {
+        transform: translate(0, 0);
+        box-shadow: none;
       }
 
       .modal-btn.primary {
@@ -592,7 +617,7 @@
 
       .modal-btn:focus {
         outline: 2px solid var(--text);
-        outline-offset: 2px;
+        outline-offset: 4px;
       }
 
       /* ===== KEYBOARD SHORTCUTS HINT ===== */
@@ -720,8 +745,12 @@
     <!-- Confirmation Modal -->
     <div class="modal-overlay" id="confirmModal">
       <div class="modal">
-        <div class="modal-title" id="modalTitle">Confirm Action</div>
-        <div class="modal-message" id="modalMessage">Are you sure?</div>
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle">Confirm Action</div>
+        </div>
+        <div class="modal-content">
+          <div class="modal-message" id="modalMessage">Are you sure?</div>
+        </div>
         <div class="modal-actions">
           <button class="modal-btn" id="modalCancel">Cancel</button>
           <button class="modal-btn primary" id="modalConfirm">Confirm</button>
@@ -919,7 +948,12 @@
         h += '<main class="exams">';
 
         if (!state.courses.length) {
-          h += '<div class="empty">No courses</div>';
+          h += `
+            <div class="empty">
+              <div>No courses</div>
+              <div style="font-size: 1rem; font-weight: 500; opacity: 0.7;">Add a course to get started</div>
+            </div>
+          `;
         } else {
           for (const c of state.courses) {
             h += `
