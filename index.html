@@ -90,23 +90,25 @@
 
       .lang-switch {
         display: flex;
+        flex-direction: column;
         background: var(--clock-text); /* White background */
         border: 2px solid var(--clock-text); /* White border */
         position: relative;
         overflow: hidden;
-        height: 2.3rem; /* Matching button height */
+        width: 38px;
       }
 
       .lang-btn {
-        padding: 0 0.8rem;
-        font-size: 0.8rem;
+        padding: 0.4rem 0;
+        font-size: 0.65rem;
         font-weight: 800;
         background: transparent;
         color: var(--clock-bg); /* Black text on white */
         border: none;
         cursor: pointer;
         text-transform: uppercase;
-        min-width: 50px;
+        height: 24px;
+        width: 100%;
         text-align: center;
         position: relative;
         z-index: 2;
@@ -124,8 +126,8 @@
         position: absolute;
         top: 0;
         left: 0;
-        height: 100%;
-        width: 33.333%;
+        width: 100%;
+        height: 33.333%;
         background: var(--clock-bg); /* Black square */
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 1;
@@ -986,7 +988,7 @@
           </div>
           <div class="header-end">
             <div class="lang-switch" onclick="cycleLang(event)">
-              <div class="lang-slider" style="transform: translateX(${state.lang === "fi" ? "0" : state.lang === "both" ? "100%" : "200%"})"></div>
+              <div class="lang-slider" style="transform: translateY(${state.lang === "fi" ? "0" : state.lang === "both" ? "100%" : "200%"})"></div>
               <button class="lang-btn ${state.lang === "fi" ? "active" : ""}" data-lang="fi">FI</button>
               <button class="lang-btn ${state.lang === "both" ? "active" : ""}" data-lang="both">BOTH</button>
               <button class="lang-btn ${state.lang === "en" ? "active" : ""}" data-lang="en">EN</button>
