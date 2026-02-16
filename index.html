@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LUT/LAB Exam Room</title>
+    <title>LUT/LAB Koetila / Exam Room</title>
     <meta name="description" content="Exam room display utility for LUT and LAB Universities" />
     <link
       rel="icon"
@@ -88,6 +88,49 @@
         color: var(--clock-bg);
       }
 
+      .lang-switch {
+        display: flex;
+        background: var(--clock-text); /* White background */
+        border: 2px solid var(--clock-text); /* White border */
+        position: relative;
+        overflow: hidden;
+        height: 2.3rem; /* Matching button height */
+      }
+
+      .lang-btn {
+        padding: 0 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 800;
+        background: transparent;
+        color: var(--clock-bg); /* Black text on white */
+        border: none;
+        cursor: pointer;
+        text-transform: uppercase;
+        min-width: 50px;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .lang-btn.active {
+        color: var(--clock-text); /* White text on black slider */
+      }
+
+      .lang-slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 33.333%;
+        background: var(--clock-bg); /* Black square */
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1;
+      }
+
       .header-main {
         display: flex;
         align-items: center;
@@ -144,8 +187,10 @@
       }
 
       .header-end {
-        width: 100px;
+        width: auto;
         text-align: right;
+        display: flex;
+        justify-content: flex-end;
       }
 
       /* ===== SETTINGS BAR ===== */
@@ -710,7 +755,7 @@
         }
 
         .header-end {
-          display: none;
+          display: flex;
         }
         .clock {
           font-size: 3.5rem;
@@ -736,6 +781,14 @@
           flex-direction: column;
           gap: 1rem;
         }
+        .lang-switch {
+          margin-top: 1rem;
+        }
+
+        .present .lang-switch {
+          margin-left: 0;
+          margin-top: 0;
+        }
       }
     </style>
   </head>
@@ -746,14 +799,14 @@
     <div class="modal-overlay" id="confirmModal">
       <div class="modal">
         <div class="modal-header">
-          <div class="modal-title" id="modalTitle">Confirm Action</div>
+          <div class="modal-title" id="modalTitle"></div>
         </div>
         <div class="modal-content">
-          <div class="modal-message" id="modalMessage">Are you sure?</div>
+          <div class="modal-message" id="modalMessage"></div>
         </div>
         <div class="modal-actions">
-          <button class="modal-btn" id="modalCancel">Cancel</button>
-          <button class="modal-btn primary" id="modalConfirm">Confirm</button>
+          <button class="modal-btn" id="modalCancel"></button>
+          <button class="modal-btn primary" id="modalConfirm"></button>
         </div>
       </div>
     </div>
@@ -765,6 +818,7 @@
         startTime: "09:00",
         duration: 180,
         leaveAfter: 15,
+        lang: "both",
         courses: [],
       };
 
@@ -810,16 +864,14 @@
         hour12: false,
       });
 
-      const dateFormatter = new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Europe/Helsinki",
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-
       const finlandClock = () => clockFormatter.format(getSyncedDate());
-      const finlandDate = () => dateFormatter.format(getSyncedDate());
+      const finlandDate = () => {
+        const d = getSyncedDate();
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        return `${day}.${month}.${year}`;
+      };
 
       const addMins = (time, mins) => {
         const [h, m] = time.split(":").map(Number);
@@ -831,6 +883,7 @@
         s: state.startTime,
         d: state.duration,
         l: state.leaveAfter,
+        g: state.lang,
         c: state.courses.map((x) => [x.id.slice(0, 8), x.name, x.code, x.color, x.notes]),
       });
 
@@ -838,6 +891,7 @@
         startTime: d.s || "09:00",
         duration: d.d || 180,
         leaveAfter: d.l || 15,
+        lang: d.g || "both",
         courses: (d.c || d.e || []).map((x) => ({
           id: x[0] || uuid(),
           name: x[1] || "",
@@ -876,8 +930,15 @@
           state.startTime = d.startTime;
           state.duration = d.duration;
           state.leaveAfter = d.leaveAfter;
+          state.lang = d.lang;
           state.courses = d.courses;
         }
+      };
+
+      const t = (fi, en) => {
+        if (state.lang === "fi") return fi;
+        if (state.lang === "en") return en;
+        return `${fi} / ${en}`;
       };
 
       const render = () => {
@@ -888,9 +949,13 @@
         const end = addMins(state.startTime, state.duration);
         const leave = addMins(state.startTime, state.leaveAfter);
 
+        document.title = t("LUT/LAB Koetila", "LUT/LAB Exam Room");
+
         let h = `
         <header class="header">
-          <button class="mode-btn" onclick="toggleMode()">${p ? "◀ Edit" : "Present ▶"}<span class="kbd-hint"><span class="kbd">E</span></span></button>
+          <div style="display: flex; align-items: center;">
+            <button class="mode-btn" onclick="toggleMode()">${p ? "◀ " + t("Muokkaa", "Edit") : t("Esitä", "Present") + " ▶"}<span class="kbd-hint"><span class="kbd">E</span></span></button>
+          </div>
           <div class="header-main">
             <div class="clock-block">
               <div class="clock mono" id="clock">${finlandClock()}</div>
@@ -899,20 +964,27 @@
             <div class="header-divider"></div>
             <div class="header-times">
               <div class="header-time-block">
-                <div class="header-time-label">Start</div>
+                <div class="header-time-label">${t("Alkaa", "Start")}</div>
                 <div class="header-time-value mono">${state.startTime}</div>
               </div>
               <div class="header-time-block">
-                <div class="header-time-label">End</div>
+                <div class="header-time-label">${t("Päättyy", "End")}</div>
                 <div class="header-time-value mono">${end}</div>
               </div>
               <div class="header-time-block">
-                <div class="header-time-label">May leave</div>
+                <div class="header-time-label">${t("Saa poistua", "May leave")}</div>
                 <div class="header-time-value mono leave">${leave}</div>
               </div>
             </div>
           </div>
-          <div class="header-end"></div>
+          <div class="header-end">
+            <div class="lang-switch" onclick="cycleLang(event)">
+              <div class="lang-slider" style="transform: translateX(${state.lang === 'fi' ? '0' : state.lang === 'both' ? '100%' : '200%'})"></div>
+              <button class="lang-btn ${state.lang === "fi" ? "active" : ""}" data-lang="fi">FI</button>
+              <button class="lang-btn ${state.lang === "both" ? "active" : ""}" data-lang="both">BOTH</button>
+              <button class="lang-btn ${state.lang === "en" ? "active" : ""}" data-lang="en">EN</button>
+            </div>
+          </div>
         </header>
       `;
 
@@ -920,7 +992,7 @@
           h += `
           <div class="settings-bar">
             <div class="setting">
-              <span class="setting-label">Start</span>
+              <span class="setting-label">${t("Alkaa", "Start")}</span>
               <div class="setting-time">
                 <input type="text" maxlength="2" value="${startH}" onchange="setStartH(this.value)" onclick="this.select()">
                 <span class="setting-time-sep">:</span>
@@ -928,18 +1000,18 @@
               </div>
             </div>
             <div class="setting">
-              <span class="setting-label">Duration</span>
+              <span class="setting-label">${t("Kesto", "Duration")}</span>
               <input class="setting-input" type="number" value="${state.duration}" min="1" max="600" onchange="setDuration(this.value)">
               <span class="setting-unit">min</span>
             </div>
             <div class="setting">
-              <span class="setting-label">May leave after</span>
+              <span class="setting-label">${t("Saa poistua", "May leave after")}</span>
               <input class="setting-input" type="number" value="${state.leaveAfter}" min="0" max="600" onchange="setLeave(this.value)">
               <span class="setting-unit">min</span>
             </div>
             <div style="margin-left: auto; display: flex; gap: 1rem;">
-              <button class="remove-all-btn" onclick="confirmRemoveAll()" ${!state.courses.length ? "disabled" : ""}>Remove All</button>
-              <button class="add-btn" onclick="addCourse()" ${state.courses.length >= MAX_COURSES ? "disabled" : ""}>+ Add Course</button>
+              <button class="remove-all-btn" onclick="confirmRemoveAll()" ${!state.courses.length ? "disabled" : ""}>${t("Poista kaikki", "Remove All")}</button>
+              <button class="add-btn" onclick="addCourse()" ${state.courses.length >= MAX_COURSES ? "disabled" : ""}>+ ${t("Lisää kurssi", "Add Course")}</button>
             </div>
           </div>
         `;
@@ -950,8 +1022,8 @@
         if (!state.courses.length) {
           h += `
             <div class="empty">
-              <div>No courses</div>
-              <div style="font-size: 1rem; font-weight: 500; opacity: 0.7;">Add a course to get started</div>
+              <div>${t("Ei kursseja", "No courses")}</div>
+              <div style="font-size: 1rem; font-weight: 500; opacity: 0.7;">${t("Lisää kurssi aloittaaksesi", "Add a course to get started")}</div>
             </div>
           `;
         } else {
@@ -961,7 +1033,7 @@
               <div class="exam-top">
                 <div class="exam-color-bar" style="background:${c.color}"></div>
                 <div class="exam-header">
-                  <span class="exam-name">${esc(c.name) || "Untitled"}</span>
+                  <span class="exam-name">${esc(c.name) || t("Nimetön", "Untitled")}</span>
                   <span class="exam-code">${esc(c.code)}</span>
                 </div>
               </div>
@@ -972,7 +1044,7 @@
                   <div class="exam-body-spacer" style="background:${c.color}"></div>
                   <div class="exam-content">
                     <div class="exam-notes">
-                      <div class="notes-label">Notes</div>
+                      <div class="notes-label">${t("Lisätiedot", "Notes")}</div>
                       <div class="notes-text">${esc(c.notes)}</div>
                     </div>
                   </div>
@@ -982,15 +1054,15 @@
               }
                 <div class="exam-edit">
                   <div class="field">
-                    <label class="field-label">Name</label>
+                    <label class="field-label">${t("Nimi", "Name")}</label>
                     <input type="text" value="${esc(c.name)}" onchange="updateCourse('${c.id}','name',this.value)">
                   </div>
                   <div class="field">
-                    <label class="field-label">Code</label>
+                    <label class="field-label">${t("Koodi", "Code")}</label>
                     <input type="text" value="${esc(c.code)}" onchange="updateCourse('${c.id}','code',this.value)">
                   </div>
                   <div class="field">
-                    <label class="field-label">Color</label>
+                    <label class="field-label">${t("Väri", "Color")}</label>
                     <div class="color-picker" data-course-id="${c.id}">
                       <div class="color-swatch" style="background:${c.color}"></div>
                       <div class="color-dropdown">
@@ -999,12 +1071,12 @@
                     </div>
                   </div>
                   <div class="field">
-                    <label class="field-label">Notes</label>
+                    <label class="field-label">${t("Lisätiedot", "Notes")}</label>
                     <textarea onchange="updateCourse('${c.id}','notes',this.value)">${esc(c.notes)}</textarea>
                   </div>
                   <div class="exam-actions">
-                    <button class="dup-btn" onclick="dupCourse('${c.id}')" ${state.courses.length >= MAX_COURSES ? "disabled" : ""}>Duplicate</button>
-                    <button class="del-btn" onclick="confirmDelete('${c.id}')">Delete</button>
+                    <button class="dup-btn" onclick="dupCourse('${c.id}')" ${state.courses.length >= MAX_COURSES ? "disabled" : ""}>${t("Monista", "Duplicate")}</button>
+                    <button class="del-btn" onclick="confirmDelete('${c.id}')">${t("Poista", "Delete")}</button>
                   </div>
                 </div>
 
@@ -1181,6 +1253,24 @@
         }
         render();
       };
+      window.setLang = (v) => {
+        state.lang = v;
+        save();
+        render();
+      };
+      window.cycleLang = (e) => {
+        const order = ["fi", "both", "en"];
+        const targetLang = e.target.closest('button')?.dataset.lang;
+        
+        if (targetLang) {
+          setLang(targetLang);
+        } else {
+          // If clicked the container background, cycle
+          const currentIndex = order.indexOf(state.lang);
+          const nextIndex = (currentIndex + 1) % order.length;
+          setLang(order[nextIndex]);
+        }
+      };
       window.setStartH = (v) => {
         const h = Math.max(0, Math.min(23, parseInt(v) || 0));
         const [, m] = state.startTime.split(":");
@@ -1228,8 +1318,10 @@
       // Modal functions
       const showModal = (title, message, onConfirm) => {
         const overlay = document.getElementById("confirmModal");
-        document.getElementById("modalTitle").textContent = title;
-        document.getElementById("modalMessage").textContent = message;
+        document.getElementById("modalTitle").textContent = title || t("Vahvista", "Confirm");
+        document.getElementById("modalMessage").textContent = message || t("Oletko varma?", "Are you sure?");
+        document.getElementById("modalCancel").textContent = t("Peruuta", "Cancel");
+        document.getElementById("modalConfirm").textContent = t("Vahvista", "Confirm");
         modalCallback = onConfirm;
         overlay.classList.add("open");
         document.getElementById("modalConfirm").focus();
@@ -1261,10 +1353,10 @@
       window.confirmDelete = (id) => {
         const c = state.courses.find((x) => x.id === id);
         if (!c) return;
-        const name = c.name || c.code || "Untitled Course";
+        const name = c.name || c.code || t("Nimetön kurssi", "Untitled Course");
         showModal(
-          "Delete Course",
-          `Are you sure you want to delete "${name}"?`,
+          t("Poista kurssi", "Delete Course"),
+          `${t("Haluatko varmasti poistaa kurssin", "Are you sure you want to delete")} "${name}"?`,
           () => delCourse(id)
         );
       };
@@ -1272,8 +1364,11 @@
       window.confirmRemoveAll = () => {
         if (!state.courses.length) return;
         showModal(
-          "Remove All Courses",
-          "Are you sure you want to remove all courses? This cannot be undone.",
+          t("Poista kaikki", "Remove All"),
+          t(
+            "Haluatko varmasti poistaa kaikki kurssit? Tätä toimintoa ei voi kumota.",
+            "Are you sure you want to remove all courses? This cannot be undone."
+          ),
           () => removeAllCourses()
         );
       };
