@@ -78,6 +78,9 @@
         cursor: pointer;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
 
       .mode-btn:hover {
@@ -345,6 +348,10 @@
         font-family: inherit;
       }
 
+      .field input {
+        height: 40px;
+      }
+
       .field input[type="text"] {
         width: 180px;
       }
@@ -365,7 +372,7 @@
 
       .color-swatch {
         width: 100%;
-        height: 41px;
+        height: 40px;
         border: 2px solid var(--border-strong);
         cursor: pointer;
         position: relative;
@@ -393,11 +400,17 @@
         z-index: 100;
         background: var(--surface);
         border: 2px solid var(--border-strong);
-        border-radius: 6px;
+        border-radius: 0;
         padding: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         display: none;
-        min-width: 140px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .color-dropdown.dropup {
+        top: auto;
+        bottom: calc(100% + 4px);
       }
 
       .color-dropdown.open {
@@ -411,8 +424,8 @@
       }
 
       .palette-color {
-        width: 24px;
-        height: 24px;
+        width: 100%;
+        aspect-ratio: 1;
         border-radius: 4px;
         cursor: pointer;
         border: 1px solid rgba(0, 0, 0, 0.15);
@@ -431,20 +444,182 @@
         outline-offset: 2px;
       }
 
-      .del-btn {
+      .exam-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
         margin-left: auto;
+      }
+
+      .del-btn,
+      .dup-btn {
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
         font-weight: 700;
+        cursor: pointer;
+        width: 120px;
+        text-align: center;
+      }
+
+      .del-btn {
         background: var(--accent);
         color: white;
         border: none;
+      }
+
+      .dup-btn {
+        background: var(--surface);
+        color: var(--text);
+        border: 2px solid var(--border-strong);
+      }
+
+      .dup-btn:hover {
+        background: var(--bg);
+      }
+
+      .dup-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      .remove-all-btn {
+        margin-left: 1rem;
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 700;
+        background: transparent;
+        color: var(--accent);
+        border: 2px solid var(--accent);
         cursor: pointer;
+      }
+
+      .remove-all-btn:hover {
+        background: var(--accent);
+        color: white;
+      }
+
+      .remove-all-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        border-color: var(--border-strong);
+        color: var(--text-secondary);
+        background: transparent;
+      }
+
+      /* ===== CONFIRMATION MODAL ===== */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+      }
+
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .modal {
+        background: var(--surface);
+        border: 2px solid var(--border-strong);
+        border-radius: 8px;
+        padding: 1.5rem;
+        min-width: 320px;
+        max-width: 400px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        transform: scale(0.95);
+        transition: transform 0.15s ease;
+      }
+
+      .modal-overlay.open .modal {
+        transform: scale(1);
+      }
+
+      .modal-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--text);
+      }
+
+      .modal-message {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: 1.25rem;
+        line-height: 1.5;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+      }
+
+      .modal-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 2px solid var(--border-strong);
+        border-radius: 4px;
+        cursor: pointer;
+        background: var(--surface);
+        color: var(--text);
+        transition: background 0.1s;
+      }
+
+      .modal-btn:hover {
+        background: var(--bg);
+      }
+
+      .modal-btn.primary {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+
+      .modal-btn.primary:hover {
+        background: #a00000;
+      }
+
+      .modal-btn:focus {
+        outline: 2px solid var(--text);
+        outline-offset: 2px;
+      }
+
+      /* ===== KEYBOARD SHORTCUTS HINT ===== */
+      .kbd-hint {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-left: 0.5rem;
+        opacity: 0.7;
+      }
+
+      .kbd {
+        display: inline-block;
+        padding: 0.1rem 0.3rem;
+        background: var(--border);
+        border-radius: 3px;
+        font-family: ui-monospace, monospace;
+        font-size: 0.8em;
       }
 
       /* ===== PRESENT MODE ===== */
       .present .header {
         padding: 1rem 2rem;
+      }
+
+      .present .settings-bar,
+      .present .exam-edit {
+        display: none;
       }
 
       .present .clock {
@@ -542,6 +717,18 @@
   <body>
     <div class="app" id="app"></div>
 
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+      <div class="modal">
+        <div class="modal-title" id="modalTitle">Confirm Action</div>
+        <div class="modal-message" id="modalMessage">Are you sure?</div>
+        <div class="modal-actions">
+          <button class="modal-btn" id="modalCancel">Cancel</button>
+          <button class="modal-btn primary" id="modalConfirm">Confirm</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       let state = {
         mode: "edit",
@@ -550,6 +737,11 @@
         leaveAfter: 15,
         courses: [],
       };
+
+      // Time offset from server (ms)
+      let timeOffset = 0;
+      let activeColorPicker = null;
+      let modalCallback = null;
 
       const uuid = () => crypto.randomUUID?.() || Math.random().toString(36).slice(2);
 
@@ -560,14 +752,14 @@
               .replace(/</g, "&lt;")
               .replace(/>/g, "&gt;")
               .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#39;")
           : "";
-
-      // Time offset from server (ms)
-      let timeOffset = 0;
 
       const syncTime = async () => {
         try {
+          // Use a more reliable way if possible, but worldtimeapi is okay as fallback
           const res = await fetch("https://worldtimeapi.org/api/timezone/Europe/Helsinki");
+          if (!res.ok) throw new Error();
           const data = await res.json();
           const serverTime = new Date(data.datetime).getTime();
           const localTime = Date.now();
@@ -580,23 +772,24 @@
 
       const getSyncedDate = () => new Date(Date.now() + timeOffset);
 
-      const finlandClock = () =>
-        getSyncedDate().toLocaleTimeString("fi-FI", {
-          timeZone: "Europe/Helsinki",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        });
+      const clockFormatter = new Intl.DateTimeFormat("fi-FI", {
+        timeZone: "Europe/Helsinki",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
 
-      const finlandDate = () =>
-        getSyncedDate().toLocaleDateString("en-GB", {
-          timeZone: "Europe/Helsinki",
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        });
+      const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Helsinki",
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      const finlandClock = () => clockFormatter.format(getSyncedDate());
+      const finlandDate = () => dateFormatter.format(getSyncedDate());
 
       const addMins = (time, mins) => {
         const [h, m] = time.split(":").map(Number);
@@ -667,7 +860,7 @@
 
         let h = `
         <header class="header">
-          <button class="mode-btn" onclick="toggleMode()">${p ? "◀ Edit" : "Present ▶"}</button>
+          <button class="mode-btn" onclick="toggleMode()">${p ? "◀ Edit" : "Present ▶"}<span class="kbd-hint"><span class="kbd">E</span></span></button>
           <div class="header-main">
             <div class="clock-block">
               <div class="clock mono" id="clock">${finlandClock()}</div>
@@ -693,7 +886,6 @@
         </header>
       `;
 
-        if (!p) {
           const [startH, startM] = state.startTime.split(":");
           h += `
           <div class="settings-bar">
@@ -715,10 +907,13 @@
               <input class="setting-input" type="number" value="${state.leaveAfter}" min="0" max="600" onchange="setLeave(this.value)">
               <span class="setting-unit">min</span>
             </div>
-            <button class="add-btn" onclick="addCourse()" ${state.courses.length >= 5 ? "disabled" : ""}>+ Add Course</button>
+            <div style="margin-left: auto; display: flex; gap: 1rem;">
+              <button class="remove-all-btn" onclick="confirmRemoveAll()" ${!state.courses.length ? "disabled" : ""}>Remove All</button>
+              <button class="add-btn" onclick="addCourse()" ${state.courses.length >= 10 ? "disabled" : ""}>+ Add Course</button>
+            </div>
           </div>
         `;
-        }
+
 
         h += '<main class="exams">';
 
@@ -750,9 +945,6 @@
               `
                   : ""
               }
-              ${
-                !p
-                  ? `
                 <div class="exam-edit">
                   <div class="field">
                     <label class="field-label">Name</label>
@@ -775,11 +967,12 @@
                     <label class="field-label">Notes</label>
                     <textarea onchange="updateCourse('${c.id}','notes',this.value)">${esc(c.notes)}</textarea>
                   </div>
-                  <button class="del-btn" onclick="delCourse('${c.id}')">Delete</button>
+                  <div class="exam-actions">
+                    <button class="dup-btn" onclick="dupCourse('${c.id}')" ${state.courses.length >= 10 ? "disabled" : ""}>Duplicate</button>
+                    <button class="del-btn" onclick="confirmDelete('${c.id}')">Delete</button>
+                  </div>
                 </div>
-              `
-                  : ""
-              }
+
             </article>
           `;
           }
@@ -808,15 +1001,7 @@
         "#ffffff", // White
       ];
 
-      let activeColorPicker = null;
-
       function initColorPickers() {
-        // Remove old event listeners to prevent duplicates
-        const oldClickHandler = window._colorPickerClickHandler;
-        const oldKeyHandler = window._colorPickerKeyHandler;
-        if (oldClickHandler) document.removeEventListener("click", oldClickHandler);
-        if (oldKeyHandler) document.removeEventListener("keydown", oldKeyHandler);
-
         document.querySelectorAll(".color-picker").forEach((picker) => {
           const swatch = picker.querySelector(".color-swatch");
           const dropdown = picker.querySelector(".color-dropdown");
@@ -859,34 +1044,80 @@
             e.stopPropagation();
             // Close other open dropdowns
             document.querySelectorAll(".color-dropdown.open").forEach((d) => {
-              if (d !== dropdown) d.classList.remove("open");
+              if (d !== dropdown) {
+                d.classList.remove("open");
+                d.classList.remove("dropup");
+              }
             });
+
+            const isOpening = !dropdown.classList.contains("open");
             dropdown.classList.toggle("open");
-            activeColorPicker = dropdown.classList.contains("open") ? picker : null;
+            activeColorPicker = isOpening ? picker : null;
+
+            if (isOpening) {
+              // Check if dropdown would go below viewport
+              const swatchRect = swatch.getBoundingClientRect();
+              const dropdownHeight = 140; // Approximate dropdown height
+              const spaceBelow = window.innerHeight - swatchRect.bottom - 16;
+
+              if (spaceBelow < dropdownHeight) {
+                dropdown.classList.add("dropup");
+              } else {
+                dropdown.classList.remove("dropup");
+              }
+            }
           });
 
           // Prevent dropdown from closing when clicking inside
           dropdown.addEventListener("click", (e) => e.stopPropagation());
         });
+      }
 
-        // Close dropdowns when clicking outside
-        window._colorPickerClickHandler = () => {
-          document
-            .querySelectorAll(".color-dropdown.open")
-            .forEach((d) => d.classList.remove("open"));
-          activeColorPicker = null;
-        };
-        document.addEventListener("click", window._colorPickerClickHandler);
+      // Close dropdowns when clicking outside
+      document.addEventListener("click", () => {
+        document.querySelectorAll(".color-dropdown.open").forEach((d) => d.classList.remove("open"));
+        activeColorPicker = null;
+      });
 
-        // Close dropdowns on escape key
-        window._colorPickerKeyHandler = (e) => {
-          if (e.key === "Escape" && activeColorPicker) {
+      // Keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        // Handle Escape key first
+        if (e.key === "Escape") {
+          if (activeColorPicker) {
             activeColorPicker.querySelector(".color-dropdown").classList.remove("open");
             activeColorPicker = null;
+            return;
           }
-        };
-        document.addEventListener("keydown", window._colorPickerKeyHandler);
-      }
+          const modal = document.getElementById("confirmModal");
+          if (modal && modal.classList.contains("open")) {
+            window.closeModal();
+            return;
+          }
+          if (document.fullscreenElement || document.webkitFullscreenElement) {
+            document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+            return;
+          }
+        }
+
+        // Ignore other shortcuts if typing in an input/textarea
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+        // E - Toggle edit/present mode
+        if (e.key === "e" || e.key === "E") {
+          e.preventDefault();
+          window.toggleMode();
+        }
+
+        // F - Toggle fullscreen
+        if (e.key === "f" || e.key === "F") {
+          e.preventDefault();
+          if (document.fullscreenElement || document.webkitFullscreenElement) {
+            document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+          } else {
+            document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.();
+          }
+        }
+      });
 
       function selectColor(courseId, color, picker) {
         const swatch = picker.querySelector(".color-swatch");
@@ -940,7 +1171,7 @@
         render();
       };
       window.addCourse = () => {
-        if (state.courses.length >= 5) return;
+        if (state.courses.length >= 10) return;
         state.courses.push({ id: uuid(), name: "", code: "", color: "#3b82f6", notes: "" });
         save();
         render();
@@ -955,6 +1186,83 @@
       };
       window.delCourse = (id) => {
         state.courses = state.courses.filter((x) => x.id !== id);
+        save();
+        render();
+      };
+
+      // Modal functions
+      const showModal = (title, message, onConfirm) => {
+        const overlay = document.getElementById("confirmModal");
+        document.getElementById("modalTitle").textContent = title;
+        document.getElementById("modalMessage").textContent = message;
+        modalCallback = onConfirm;
+        overlay.classList.add("open");
+        document.getElementById("modalConfirm").focus();
+      };
+
+      const closeModal = () => {
+        document.getElementById("confirmModal").classList.remove("open");
+        modalCallback = null;
+      };
+
+      // Initialize modal listeners once
+      document.addEventListener("DOMContentLoaded", () => {
+        const confirmBtn = document.getElementById("modalConfirm");
+        const cancelBtn = document.getElementById("modalCancel");
+        const overlay = document.getElementById("confirmModal");
+
+        confirmBtn.addEventListener("click", () => {
+          if (modalCallback) modalCallback();
+          closeModal();
+        });
+
+        cancelBtn.addEventListener("click", closeModal);
+
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) closeModal();
+        });
+      });
+
+      window.confirmDelete = (id) => {
+        const c = state.courses.find((x) => x.id === id);
+        if (!c) return;
+        const name = c.name || c.code || "Untitled Course";
+        showModal(
+          "Delete Course",
+          `Are you sure you want to delete "${name}"?`,
+          () => delCourse(id)
+        );
+      };
+
+      window.confirmRemoveAll = () => {
+        if (!state.courses.length) return;
+        showModal(
+          "Remove All Courses",
+          "Are you sure you want to remove all courses? This cannot be undone.",
+          () => removeAllCourses()
+        );
+      };
+
+      window.removeAllCourses = () => {
+        state.courses = [];
+        save();
+        render();
+      };
+
+      window.closeModal = closeModal;
+
+      window.dupCourse = (id) => {
+        if (state.courses.length >= 10) return;
+        const idx = state.courses.findIndex((x) => x.id === id);
+        if (idx === -1) return;
+        const c = state.courses[idx];
+        state.courses.splice(idx + 1, 0, {
+          id: uuid(),
+          name: c.name,
+          code: c.code,
+          color: c.color,
+          notes: c.notes,
+        });
         save();
         render();
       };
