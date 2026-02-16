@@ -730,6 +730,7 @@
     </div>
 
     <script>
+      const MAX_COURSES = 10;
       let state = {
         mode: "edit",
         startTime: "09:00",
@@ -909,7 +910,7 @@
             </div>
             <div style="margin-left: auto; display: flex; gap: 1rem;">
               <button class="remove-all-btn" onclick="confirmRemoveAll()" ${!state.courses.length ? "disabled" : ""}>Remove All</button>
-              <button class="add-btn" onclick="addCourse()" ${state.courses.length >= 10 ? "disabled" : ""}>+ Add Course</button>
+              <button class="add-btn" onclick="addCourse()" ${state.courses.length >= MAX_COURSES ? "disabled" : ""}>+ Add Course</button>
             </div>
           </div>
         `;
@@ -968,7 +969,7 @@
                     <textarea onchange="updateCourse('${c.id}','notes',this.value)">${esc(c.notes)}</textarea>
                   </div>
                   <div class="exam-actions">
-                    <button class="dup-btn" onclick="dupCourse('${c.id}')" ${state.courses.length >= 10 ? "disabled" : ""}>Duplicate</button>
+                    <button class="dup-btn" onclick="dupCourse('${c.id}')" ${state.courses.length >= MAX_COURSES ? "disabled" : ""}>Duplicate</button>
                     <button class="del-btn" onclick="confirmDelete('${c.id}')">Delete</button>
                   </div>
                 </div>
@@ -1171,7 +1172,7 @@
         render();
       };
       window.addCourse = () => {
-        if (state.courses.length >= 10) return;
+        if (state.courses.length >= MAX_COURSES) return;
         state.courses.push({ id: uuid(), name: "", code: "", color: "#3b82f6", notes: "" });
         save();
         render();
@@ -1249,10 +1250,8 @@
         render();
       };
 
-      window.closeModal = closeModal;
-
       window.dupCourse = (id) => {
-        if (state.courses.length >= 10) return;
+        if (state.courses.length >= MAX_COURSES) return;
         const idx = state.courses.findIndex((x) => x.id === id);
         if (idx === -1) return;
         const c = state.courses[idx];
@@ -1266,6 +1265,8 @@
         save();
         render();
       };
+
+      window.closeModal = closeModal;
 
       load();
       syncTime();
