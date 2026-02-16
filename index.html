@@ -247,7 +247,7 @@
     }
 
     .exam-color-bar {
-      width: 10px;
+      width: 20px;
     }
 
     .exam-header {
@@ -275,7 +275,7 @@
     }
 
     .exam-body-spacer {
-      width: 10px;
+      width: 20px;
     }
 
     .exam-content {
@@ -338,8 +338,79 @@
 
     .field input[type="text"] { width: 180px; }
     .field input[type="time"] { width: 130px; }
-    .field input[type="color"] { width: 50px; height: 38px; padding: 2px; cursor: pointer; }
     .field textarea { width: 260px; height: 60px; resize: vertical; }
+
+    /* ===== CUSTOM COLOR PICKER ===== */
+    .color-picker {
+      position: relative;
+      width: 180px;
+    }
+
+    .color-swatch {
+      width: 100%;
+      height: 41px;
+      border: 2px solid var(--border-strong);
+      cursor: pointer;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .color-swatch::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--text);
+      pointer-events: none;
+    }
+
+    .color-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      z-index: 100;
+      background: var(--surface);
+      border: 2px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+      min-width: 140px;
+    }
+
+    .color-dropdown.open {
+      display: block;
+    }
+
+    .color-palette {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .palette-color {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.15);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .palette-color:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .palette-color.selected {
+      outline: 2px solid var(--text);
+      outline-offset: 2px;
+    }
 
     .del-btn {
       margin-left: auto;
@@ -395,7 +466,7 @@
 
     .present .exam-color-bar,
     .present .exam-body-spacer {
-      width: 12px;
+      width: 24px;
     }
 
     .present .exam-header {
@@ -613,7 +684,12 @@
                   </div>
                   <div class="field">
                     <label class="field-label">Color</label>
-                    <input type="color" value="${c.color}" onchange="updateCourse('${c.id}','color',this.value)">
+                    <div class="color-picker" data-course-id="${c.id}">
+                      <div class="color-swatch" style="background:${c.color}"></div>
+                      <div class="color-dropdown">
+                        <div class="color-palette"></div>
+                      </div>
+                    </div>
                   </div>
                   <div class="field">
                     <label class="field-label">Notes</label>
@@ -629,7 +705,115 @@
 
       h += '</main>';
       app.innerHTML = h;
+
+      // Initialize color pickers
+      initColorPickers();
     };
+
+    // Color palette - 12 distinct standard colors in good order
+    const COLOR_PALETTE = [
+      '#ef4444', // Red
+      '#f97316', // Orange
+      '#eab308', // Yellow
+      '#22c55e', // Green
+      '#06b6d4', // Cyan
+      '#3b82f6', // Blue
+      '#6366f1', // Indigo
+      '#a855f7', // Purple
+      '#ec4899', // Pink
+      '#64748b', // Slate
+      '#000000', // Black
+      '#ffffff', // White
+    ];
+
+    let activeColorPicker = null;
+
+    function initColorPickers() {
+      // Remove old event listeners to prevent duplicates
+      const oldClickHandler = window._colorPickerClickHandler;
+      const oldKeyHandler = window._colorPickerKeyHandler;
+      if (oldClickHandler) document.removeEventListener('click', oldClickHandler);
+      if (oldKeyHandler) document.removeEventListener('keydown', oldKeyHandler);
+
+      document.querySelectorAll('.color-picker').forEach(picker => {
+        const swatch = picker.querySelector('.color-swatch');
+        const dropdown = picker.querySelector('.color-dropdown');
+        const palette = picker.querySelector('.color-palette');
+        const courseId = picker.dataset.courseId;
+
+        // Populate palette
+        palette.innerHTML = '';
+        const rgbToHex = (rgb) => {
+          if (rgb.startsWith('#')) return rgb;
+          const match = rgb.match(/\d+/g);
+          if (!match) return '#3b82f6';
+          return '#' + match.slice(0, 3).map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+        };
+        const currentColor = swatch.style.background || '#3b82f6';
+        const currentHex = rgbToHex(currentColor);
+
+        COLOR_PALETTE.forEach(color => {
+          const colorEl = document.createElement('div');
+          colorEl.className = 'palette-color';
+          colorEl.style.background = color;
+          if (color.toLowerCase() === currentHex.toLowerCase()) {
+            colorEl.classList.add('selected');
+          }
+          colorEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectColor(courseId, color, picker);
+          });
+          palette.appendChild(colorEl);
+        });
+
+        // Toggle dropdown
+        swatch.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Close other open dropdowns
+          document.querySelectorAll('.color-dropdown.open').forEach(d => {
+            if (d !== dropdown) d.classList.remove('open');
+          });
+          dropdown.classList.toggle('open');
+          activeColorPicker = dropdown.classList.contains('open') ? picker : null;
+        });
+
+        // Prevent dropdown from closing when clicking inside
+        dropdown.addEventListener('click', (e) => e.stopPropagation());
+      });
+
+      // Close dropdowns when clicking outside
+      window._colorPickerClickHandler = () => {
+        document.querySelectorAll('.color-dropdown.open').forEach(d => d.classList.remove('open'));
+        activeColorPicker = null;
+      };
+      document.addEventListener('click', window._colorPickerClickHandler);
+
+      // Close dropdowns on escape key
+      window._colorPickerKeyHandler = (e) => {
+        if (e.key === 'Escape' && activeColorPicker) {
+          activeColorPicker.querySelector('.color-dropdown').classList.remove('open');
+          activeColorPicker = null;
+        }
+      };
+      document.addEventListener('keydown', window._colorPickerKeyHandler);
+    }
+
+    function selectColor(courseId, color, picker) {
+      const swatch = picker.querySelector('.color-swatch');
+      const palette = picker.querySelector('.color-palette');
+
+      swatch.style.background = color;
+      updateCourse(courseId, 'color', color);
+
+      // Update selected state
+      palette.querySelectorAll('.palette-color').forEach(el => {
+        el.classList.toggle('selected', el.style.background === color);
+      });
+
+      // Close dropdown
+      picker.querySelector('.color-dropdown').classList.remove('open');
+      activeColorPicker = null;
+    }
 
     window.toggleMode = () => { 
       state.mode = state.mode === 'edit' ? 'present' : 'edit'; 
@@ -654,7 +838,7 @@
     };
     window.setDuration = v => { state.duration = Math.max(1, +v || 180); save(); render(); };
     window.setLeave = v => { state.leaveAfter = Math.max(0, +v || 15); save(); render(); };
-    window.addCourse = () => { if (state.courses.length >= 5) return; state.courses.push({ id: uuid(), name: '', code: '', color: '#2563eb', notes: '' }); save(); render(); };
+    window.addCourse = () => { if (state.courses.length >= 5) return; state.courses.push({ id: uuid(), name: '', code: '', color: '#3b82f6', notes: '' }); save(); render(); };
     window.updateCourse = (id, k, v) => { const c = state.courses.find(x => x.id === id); if (c) { c[k] = v; save(); render(); } };
     window.delCourse = id => { state.courses = state.courses.filter(x => x.id !== id); save(); render(); };
 
